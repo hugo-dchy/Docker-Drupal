@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  drupal:
+    build:
+      context: docker/drupal
+      args:
+        DRUPAL_IMAGE_FLAVOR: ${DRUPAL_IMAGE_FLAVOR}
+    container_name: "drupal_${PROJECT_NAME}"
+    ports:
+      - $SERVICE_DRUPAL_PORT:80
+    volumes: # this line must be commented
+      - ./www:/opt/drupal  # for the intial launch
+    restart: on-failure
+    networks:
+      - internal
+
+  mysql:
+    image: mysql:8.0
+    container_name: "mysql_${PROJECT_NAME}"
+    command: --default-authentication-plugin=mysql_native_password
+    restart: on-failure
+    env_file: .env
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - internal
+
+  pma:
+    image: phpmyadmin/phpmyadmin:5.2.0
+    container_name: "phpmyadmin_${PROJECT_NAME}"
+    restart: on-failure
+    env_file: .env
+    ports:
+      - $SERVICE_PMA_PORT:80
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+    name: "net_${PROJECT_NAME}"
+
+volumes:
+  db-data:
+    name: "db-data_${PROJECT_NAME}"
